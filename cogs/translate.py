@@ -24,6 +24,20 @@ def translate(
     )
     return response.translations[0].translated_text
 
+def detect_language(
+        text: str = ''
+) -> translate_v3.DetectLanguageResponse:
+    client = translate_v3.TranslationServiceClient()
+    location = "global"
+    parent = f"projects/{gcp_id}/locations/{location}"
+    response = client.detect_language(
+        content=text,
+        parent=parent,
+        mime_type="text/plain",
+    )
+    return response.languages[0].language_code
+
+
 class Translate(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -31,15 +45,18 @@ class Translate(commands.Cog):
     async def cog_load(self):
         print(f"Cog {self.__cog_name__} loaded!")
 
-    @app_commands.command(name='en_translate', description='translate japanese to english')
-    async def en_translate(self, interaction: discord.Interaction, *, content: str):
-        await interaction.response.defer()
-        await interaction.followup.send(translate(text=content, source_code='ja', target_code='en-US'))
-
-    @app_commands.command(name='jp_translate', description='英語を日本語に翻訳する')
-    async def jp_translate(self, interaction: discord.Interaction, *, content: str):
-        await interaction.response.defer()
-        await interaction.followup.send(translate(text=content, source_code='en-US', target_code='ja'))
-
+    @commands.hybrid_command(name='translate', description='translate one language to another', with_app_command=True)
+    async def translate(self, ctx: commands.Context, *, content):
+        await ctx.channel.typing()
+        await ctx.defer()
+        source_lang = detect_language(text=content)
+        if source_lang == 'ja':
+            await ctx.reply(translate(text=content, source_code=source_lang, target_code='en-US'), mention_author=False)
+        elif source_lang == 'en':
+            await ctx.reply(translate(text=content, source_code=source_lang, target_code='ja'), mention_author=False)
+        else:
+            await ctx.reply('ん？英語か日本語を入力してくださいね～\n\
+                            Please submit your arguments in either English or Japanese!')
+    
 async def setup(bot):
     await bot.add_cog(Translate(bot))
