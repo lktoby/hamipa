@@ -45,7 +45,7 @@ class Translate(commands.Cog):
     async def cog_load(self):
         print(f"Cog {self.__cog_name__} loaded!")
 
-    @commands.hybrid_command(name='translate', description='translate one language to another', with_app_command=True)
+    @commands.hybrid_command(name='translate', description='日本語を英語に翻訳する translate english to japanese', with_app_command=True)
     async def translate(self, ctx: commands.Context, *, content):
         await ctx.channel.typing()
         await ctx.defer()
